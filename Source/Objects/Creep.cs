@@ -28,7 +28,7 @@ namespace SpaceMarines_TD.Source.Objects
         public Creep(Vector2 size, Vector2 center, Vector2 direction, CreepType type) : base(size, center)
         {
             m_direction = direction;
-            m_moveRate = type == CreepType.Air ? 400 / 1000.0 : 200 / 1000.0;
+            m_moveRate = type == CreepType.Air ? 200 / 1000.0 : 100 / 1000.0;
 
             Health = 100;
             Money = GetMoneyReward(type);

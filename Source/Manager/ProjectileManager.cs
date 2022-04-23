@@ -25,9 +25,9 @@ namespace SpaceMarines_TD.Source.Manager
 
         public void loadContent(ContentManager contentManager, SpriteSheet spriteSheet)
         {
-            m_missileRenderer = new StaticSprite(spriteSheet, 50, 50, 1, 847);
-            m_bulletRenderer = new StaticSprite(spriteSheet, 50, 50, 1, 796);
-            m_bombRenderer = new StaticSprite(spriteSheet, 50, 50, 1, 745);
+            m_missileRenderer = new StaticSprite(spriteSheet, 50, 50, 1, 822);
+            m_bulletRenderer = new StaticSprite(spriteSheet, 50, 50, 1, 771);
+            m_bombRenderer = new StaticSprite(spriteSheet, 50, 50, 1, 720);
         }
 
         public void Update(GameTime gameTime, Rectangle backgroundRectangle)
@@ -52,7 +52,7 @@ namespace SpaceMarines_TD.Source.Manager
                             projectileCollision.Health -= projectile.Damage;
                             deadProjectiles.Add(projectile);
                         }
-                        else if (projectile.Type == ProjectileType.Bomb)
+                        else if (projectile.Type == ProjectileType.Bomb && projectileCollision.Type == CreepType.Ground)
                         {
                             var damageRectangle = new Rectangle((int) projectile.Center.X - projectile.Diameter / 2, (int) projectile.Center.Y - projectile.Diameter / 2,
                                 projectile.Diameter, projectile.Diameter);
@@ -94,7 +94,7 @@ namespace SpaceMarines_TD.Source.Manager
                 }
                 else
                 {
-                    m_bombRenderer.draw(spriteBatch, projectile, 0, Color.White);
+                    m_bombRenderer.draw(spriteBatch, projectile, projectile.Heading, Color.White);
                 }
             }
         }

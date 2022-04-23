@@ -9,7 +9,7 @@ namespace SpaceMarines_TD.Source.Objects
 {
     public class Tower : AnimatedSpriteModel
     {
-        private const double HeadingTolerance = Math.PI / 10;
+        private const double HeadingTolerance = Math.PI / 20;
 
         public readonly TowerType m_type;
         public readonly ProjectileType m_projectileType;
@@ -78,15 +78,15 @@ namespace SpaceMarines_TD.Source.Objects
                     break;
                 case TowerType.Bullet:
                     Range = 400;
-                    Damage = 10;
-                    FireRate = 200;
+                    Damage = 15;
+                    FireRate = 150;
                     m_turnAcceleration = 100;
                     m_maxTurnSpeed = 2 * Math.PI; ;
                     m_projectileType = ProjectileType.Bullet;
                     break;
                 case TowerType.Bomb:
                     Range = 600;
-                    Damage = 20;
+                    Damage = 40;
                     FireRate = 500;
                     m_turnAcceleration = 100;
                     m_maxTurnSpeed = 2 * Math.PI; ;
@@ -94,7 +94,7 @@ namespace SpaceMarines_TD.Source.Objects
                     break;
                 case TowerType.Mixed:
                     Range = 500;
-                    Damage = 10;
+                    Damage = 20;
                     FireRate = 200;
                     m_turnAcceleration = 100;
                     m_maxTurnSpeed = 2 * Math.PI; ;
@@ -111,7 +111,7 @@ namespace SpaceMarines_TD.Source.Objects
                 filteredCreeps = creeps.Where(creep => creep.Type == CreepType.Air).ToList();
             }
 
-            if (m_type == TowerType.Bullet)
+            if (m_type == TowerType.Bullet || m_type == TowerType.Bomb)
             {
                 filteredCreeps = creeps.Where(creep => creep.Type == CreepType.Ground).ToList();
             }

@@ -33,14 +33,14 @@ namespace SpaceMarines_TD.Source.Objects
             switch (Type)
             {
                 case ProjectileType.Missile:
-                    m_moveRate = 600 / 1000.0;
+                    m_moveRate = 300 / 1000.0;
                     break;
                 case ProjectileType.Bullet:
                     m_moveRate = 1200 / 1000.0;
                     break;
                 case ProjectileType.Bomb:
-                    m_moveRate = 400 / 1000.0;
-                    Diameter = 200;
+                    m_moveRate = 200 / 1000.0;
+                    Diameter = 400;
                     break;
             }
         }
@@ -51,7 +51,6 @@ namespace SpaceMarines_TD.Source.Objects
             {
                 m_lastDirectionMoved = Vector2.Normalize(new Vector2(m_target.Center.X - Center.X, m_target.Center.Y - Center.Y))
                                 * (float) (m_moveRate * gameTime.ElapsedGameTime.TotalMilliseconds);
-                Heading = Math.Atan2(m_lastDirectionMoved.Y, m_lastDirectionMoved.X);
 
                 if (m_target.Bounds.Intersects(Bounds))
                 {
@@ -59,6 +58,15 @@ namespace SpaceMarines_TD.Source.Objects
                 }
             }
             m_center += m_lastDirectionMoved;
+
+            if (Type == ProjectileType.Bullet || Type == ProjectileType.Missile)
+            {
+                Heading = Math.Atan2(m_lastDirectionMoved.Y, m_lastDirectionMoved.X);
+            }
+            else
+            {
+                Heading += MathHelper.PiOver4;
+            }
         }
     }
 

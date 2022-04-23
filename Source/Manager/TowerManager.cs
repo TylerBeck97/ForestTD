@@ -21,7 +21,8 @@ namespace SpaceMarines_TD.Source.Manager
 
         private AirTowerSprite m_airTowerRenderer;
         private AnimatedTowerSprite m_groundTowerRenderer;
-        private StaticSprite m_bombTowerRenderer;
+        private AnimatedTowerSprite m_bombTowerRenderer;
+        private AnimatedTowerSprite m_mixedTowerRenderer;
 
         private Texture2D m_towerBaseTexture2D;
         private Texture2D m_rangeCircleTexture2D;
@@ -43,13 +44,22 @@ namespace SpaceMarines_TD.Source.Manager
 
         public void loadContent(ContentManager contentManager, SpriteSheet spriteSheet)
         {
-            m_airTowerRenderer = new AirTowerSprite(spriteSheet, 100, 100, new[]
-            {
-                (1, 103),
-                (102, 103),
-                (203, 103),
-            });
-            m_bombTowerRenderer = new StaticSprite(spriteSheet, 100, 100, 1, 203);
+            m_airTowerRenderer = new AirTowerSprite(spriteSheet, 100, 100,
+                new[]
+                {
+                    (1, 103),
+                    (102, 103),
+                    (203, 103),
+                });
+
+            m_bombTowerRenderer = new AnimatedTowerSprite(spriteSheet, 100, 100, 
+                new[]
+                {
+                    (1, 203),
+                    (102, 203),
+                    (203, 203),
+                    (304, 203)
+                });
 
             m_groundTowerRenderer = new AnimatedTowerSprite(spriteSheet, 100, 100, 
                 new []
@@ -58,6 +68,15 @@ namespace SpaceMarines_TD.Source.Manager
                     (102, 1),
                     (203, 1),
                     (304, 1)
+                });
+
+            m_mixedTowerRenderer = new AnimatedTowerSprite(spriteSheet, 100, 100,
+                new[]
+                {
+                    (1, 304),
+                    (102, 304),
+                    (203, 304),
+                    (304, 304)
                 });
 
             m_rangeCircleTexture2D = contentManager.Load<Texture2D>("rangeCircle");
@@ -90,7 +109,10 @@ namespace SpaceMarines_TD.Source.Manager
                         break;
 
                     case TowerType.Bomb:
-                        m_bombTowerRenderer.draw(spriteBatch, tower, tower.Heading + MathHelper.PiOver2, towerColor);
+                        m_bombTowerRenderer.draw(gameTime, spriteBatch, tower, tower.Heading + MathHelper.PiOver2, false, towerColor);
+                        break;
+                    case TowerType.Mixed:
+                        m_mixedTowerRenderer.draw(gameTime, spriteBatch, tower, tower.Heading + MathHelper.PiOver2, false, towerColor);
                         break;
                 }
             }
@@ -120,11 +142,11 @@ namespace SpaceMarines_TD.Source.Manager
                     break;
 
                 case TowerType.Bomb:
-                    m_bombTowerRenderer.draw(spriteBatch, tower, MathHelper.PiOver2, true, towerColor);
+                    m_bombTowerRenderer.draw(gameTime, spriteBatch, tower, MathHelper.PiOver2, true, towerColor);
                     break;
 
                 case TowerType.Mixed:
-                    // TODO
+                    m_mixedTowerRenderer.draw(gameTime, spriteBatch, tower, tower.Heading + MathHelper.PiOver2, true, towerColor);
                     break;
             }
 
@@ -169,7 +191,7 @@ namespace SpaceMarines_TD.Source.Manager
 
             if (m_placeTower != null)
             {
-                // TODO Revisit how to guarantee that there is a path
+                // TODO Fix tower placement bug when you try to place three bomb towers in a row
                 var pos = new Vector2(MathF.Round(state.X / 50.0f) * 50, MathF.Round(state.Y / 50.0f) * 50);
 
                 m_placeTower.Center = pos;

@@ -18,7 +18,7 @@ namespace SpaceMarines_TD.Source.Manager
 
         private Texture2D m_healthBar;
 
-        private const double CreepSpawnCooldown = 500;
+        private const double CreepSpawnCooldown = 1000;
         private TimeSpan m_lastCreepSpawn;
 
         private WeightedGraph m_graph;
@@ -37,13 +37,13 @@ namespace SpaceMarines_TD.Source.Manager
             m_healthBar = contentManager.Load<Texture2D>("HealthBar");
             _debugService = debugService;
 
-            m_airCreepRenderer = new AnimatedSprite(spriteSheet, 50, 50, 
+            m_airCreepRenderer = new AnimatedSprite(spriteSheet, 75, 75, 
                 new []
                 {
-                    (1, 898),
-                    (52, 898),
-                    (103, 898),
-                    (154, 898)
+                    (1, 873),
+                    (77, 873),
+                    (153, 873),
+                    (229, 873)
                 }, 100.0f);
             m_groundCreepRenderer = new AnimatedSprite(spriteSheet, 50, 50, 
                 new []
@@ -66,7 +66,7 @@ namespace SpaceMarines_TD.Source.Manager
             {
                 var rng = new Random();
 
-                var center = new Vector2(MathF.Round(rng.Next(275, 1175) / 50.0f) * 50 + 25, -25);
+                var center = new Vector2(MathF.Round(rng.Next(276, 1176) / 51.0f) * 51 + 25, -25);
                 m_gameStateManager.Creeps.Add(new Creep(new Vector2(creepSize * 1.5f, creepSize * 1.5f), center, Vector2.UnitY, CreepType.Air));
 
                 center = new Vector2(MathF.Round(rng.Next(275, 1175) / 50.0f) * 50 + 25, -25);

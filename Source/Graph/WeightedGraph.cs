@@ -37,6 +37,7 @@ namespace SpaceMarines_TD.Source.Graph
         // Garbage
         private static int _temp = 0;
 
+        // Uses A* Algorithm for path finding
         public Stack<Vector2> FindPath(float startX, float startY, float endX, float endY)
         {
             // DEBUG
