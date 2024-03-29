@@ -11,7 +11,7 @@ namespace SpaceMarines_TD.Source.Objects
     {
         private const double HeadingTolerance = Math.PI / 20;
 
-        public readonly TowerType m_type;
+        public readonly TowerType type;
         public readonly ProjectileType m_projectileType;
 
         private readonly double m_turnAcceleration;
@@ -21,6 +21,8 @@ namespace SpaceMarines_TD.Source.Objects
         private double m_turnSpeed;
 
         public int BaseCost { get; }
+
+        public int TotalCost { get; private set; }
 
         /// <summary>
         /// Cooldown between shots in burst.
@@ -37,7 +39,7 @@ namespace SpaceMarines_TD.Source.Objects
         /// </summary>
         public int BurstLength { get; set; }
 
-        public int Damage { get; }
+        public int Damage { get; private set; }
 
         /// <summary>
         /// Cooldown between last shots in burst.
@@ -59,19 +61,19 @@ namespace SpaceMarines_TD.Source.Objects
 
         public Tower(Vector2 size, Vector2 center, TowerType type, int baseCost) : base(size, center)
         {
-            m_type = type;
+            this.type = type;
             BaseCost = baseCost;
             BurstLength = 1;
             TowerLevel = 1;
 
-            switch (m_type)
+            switch (this.type)
             {
                 case TowerType.Air:
                     Range = 750;
-                    Damage = 50;
-                    FireRate = 500;
+                    Damage = 100;
+                    FireRate = 1000;
                     BurstLength = 2;
-                    BurstFireRate = 350;
+                    BurstFireRate = 500;
                     m_turnAcceleration = 100;
                     m_maxTurnSpeed = 2 * Math.PI;
                     m_projectileType = ProjectileType.Missile;
@@ -86,32 +88,35 @@ namespace SpaceMarines_TD.Source.Objects
                     break;
                 case TowerType.Bomb:
                     Range = 600;
-                    Damage = 40;
-                    FireRate = 500;
+                    Damage = 50;
+                    FireRate = 1000;
                     m_turnAcceleration = 100;
                     m_maxTurnSpeed = 2 * Math.PI; ;
                     m_projectileType = ProjectileType.Bomb;
                     break;
                 case TowerType.Mixed:
                     Range = 500;
-                    Damage = 20;
-                    FireRate = 200;
+                    Damage = 100;
+                    FireRate = 600;
                     m_turnAcceleration = 100;
                     m_maxTurnSpeed = 2 * Math.PI; ;
                     m_projectileType = ProjectileType.Bullet;
                     break;
             }
+
+            UpgradeCost = BaseCost;
+            TotalCost = baseCost;
         }
 
         public Projectile Update(GameTime gameTime, List<Creep> creeps, int projectileSize)
         {
             var filteredCreeps = creeps;
-            if (m_type == TowerType.Air)
+            if (type == TowerType.Air)
             {
                 filteredCreeps = creeps.Where(creep => creep.Type == CreepType.Air).ToList();
             }
 
-            if (m_type == TowerType.Bullet || m_type == TowerType.Bomb)
+            if (type == TowerType.Bullet || type == TowerType.Bomb)
             {
                 filteredCreeps = creeps.Where(creep => creep.Type == CreepType.Ground).ToList();
             }
@@ -157,11 +162,7 @@ namespace SpaceMarines_TD.Source.Objects
 
                     if (Math.Abs(Heading - m_targetHeading) > HeadingTolerance) // Need to turn towards the target.
                     {
-                        var headingDiff = m_targetHeading - Heading;
-                        if (Math.Abs(Math.PI * 2 - headingDiff) < Math.Abs(headingDiff))
-                        {
-                            headingDiff -= Math.PI;
-                        }
+                        var headingDiff = (m_targetHeading - Heading + MathF.PI * 3) % MathHelper.TwoPi - MathHelper.Pi;
 
                         m_turnSpeed = Math.Min(m_maxTurnSpeed,
                             m_turnSpeed + m_turnAcceleration * gameTime.ElapsedGameTime.TotalSeconds);
@@ -219,7 +220,7 @@ namespace SpaceMarines_TD.Source.Objects
         private Projectile CreateProjectile(int projectileSize, Creep closestCreep)
         {
             var offset = Vector2.Zero;
-            if (m_type == TowerType.Air)
+            if (type == TowerType.Air)
             {
                 offset = new Vector2(0, 29) * (BurstIndex * 2 - 3);
             }
@@ -243,15 +244,28 @@ namespace SpaceMarines_TD.Source.Objects
         {
             if (!CanUpgrade()) return;
 
-            switch (m_type)
+            TotalCost += UpgradeCost;
+
+            switch (type)
             {
                 case TowerType.Air:
                     Range += 50;
-                    BurstFireRate -= 25;
-                    FireRate -= 50;
-                    UpgradeCost += BaseCost / 2;
+                    Damage += Damage;
+                    break;
+                case TowerType.Bullet:
+                    Range += 50;
+                    Damage += Damage;
+                    break;
+                case TowerType.Bomb:
+                    Range += 50;
+                    Damage += Damage;
+                    break;
+                case TowerType.Mixed:
+                    Range += 50;
+                    Damage += Damage;
                     break;
             }
+            UpgradeCost += BaseCost / 2;
 
             TowerLevel++;
         }

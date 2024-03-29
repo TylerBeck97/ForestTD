@@ -25,21 +25,27 @@ namespace SpaceMarines_TD.Source.Objects
         public int Score { get; set; }
         public CreepType Type { get; }
 
-        public Creep(Vector2 size, Vector2 center, Vector2 direction, CreepType type) : base(size, center)
+        public bool IsUpAndDown { get; }
+        public bool IsMovingPositive { get; }
+        public bool HasEnteredField { get; set; }
+
+        public Creep(Vector2 size, Vector2 center, Vector2 direction, CreepType type, bool isUpAndDown, bool isMovingPositive, int level) : base(size, center)
         {
             m_direction = direction;
-            m_moveRate = type == CreepType.Air ? 200 / 1000.0 : 100 / 1000.0;
+            m_moveRate = type == CreepType.Air ? Math.Min((90 + 5 * level), 300) / 1000.0 * (level / 4.0f) : (90 + 10 * level) / 1000.0;
 
-            Health = 100;
+            Health = 100 * level / 2;
             Money = GetMoneyReward(type);
             Score = GetScoreReward(type);
             Type = type;
+            IsUpAndDown = isUpAndDown;
+            IsMovingPositive = isMovingPositive;
+            HasEnteredField = false;
         }
 
         public void Update(GameTime gameTime)
         {
             var moveScalar = (float) (m_moveRate * gameTime.ElapsedGameTime.TotalMilliseconds);
-            // TODO: MakeCreep move offscreen when no more waypoints exist
             if (Type == CreepType.Ground)
             {
                 if (!m_reachedGoal)
@@ -79,8 +85,8 @@ namespace SpaceMarines_TD.Source.Objects
         {
             switch (type)
             {
-                case CreepType.Air: return 100;
-                case CreepType.Ground: return 50;
+                case CreepType.Air: return 2;
+                case CreepType.Ground: return 1;
                 default: throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }
         }
@@ -89,8 +95,8 @@ namespace SpaceMarines_TD.Source.Objects
         {
             switch (type)
             {
-                case CreepType.Air: return 50;
-                case CreepType.Ground: return 25;
+                case CreepType.Air: return 5;
+                case CreepType.Ground: return 2;
                 default: throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }
         }

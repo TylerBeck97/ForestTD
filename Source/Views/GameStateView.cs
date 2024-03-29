@@ -8,10 +8,13 @@ namespace SpaceMarines_TD.Source.Views
     {
         protected GraphicsDeviceManager m_graphics;
         protected SpriteBatch m_spriteBatch;
+        protected Matrix m_scalingMatrix;
         public void initialize(GraphicsDevice graphicsDevice, GraphicsDeviceManager graphics)
         {
             m_graphics = graphics;
             m_spriteBatch = new SpriteBatch(graphicsDevice);
+            m_scalingMatrix = Matrix.CreateScale(m_graphics.GraphicsDevice.Viewport.Width / 1920.0f,
+                m_graphics.GraphicsDevice.Viewport.Height / 1080.0f, 1);
         }
 
         protected static void drawOutlineText(SpriteBatch spriteBatch, SpriteFont font, string text, Color backColor, Color frontColor, Vector2 position, float scale)

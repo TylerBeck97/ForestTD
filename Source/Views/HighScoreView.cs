@@ -11,13 +11,15 @@ namespace SpaceMarines_TD.Source.Views
         private readonly HighScoreManager m_leaderBoard;
         private SpriteFont m_font;
 
+        private Texture2D m_background;
         public HighScoreView(HighScoreManager leaderBoard)
         {
             m_leaderBoard = leaderBoard;
         }
         public override void loadContent(ContentManager contentManager)
         {
-            m_font = contentManager.Load<SpriteFont>("fonts/Opensans36");
+            m_font = contentManager.Load<SpriteFont>("fonts/Roboto36");
+            m_background = contentManager.Load<Texture2D>("images/MainMenu");
         }
 
         public override GameStateEnum processInput(GameTime gameTime)
@@ -28,9 +30,11 @@ namespace SpaceMarines_TD.Source.Views
 
         public override void render(GameTime gameTime)
         {
-            m_spriteBatch.Begin();
+            m_spriteBatch.Begin(transformMatrix: m_scalingMatrix);
 
-            float bottom = drawMenuItem(m_font, "Top 5 HighScores", 200, Color.Red);
+            m_spriteBatch.Draw(m_background, new Rectangle(0, 0, 1920, 1080), Color.White);
+
+            float bottom = drawMenuItem(m_font, "Top 5 HighScores", 300, Color.Red);
             foreach (var score in m_leaderBoard.LeaderBoard.Scores)
             {
                 if (score > 0)
@@ -51,7 +55,7 @@ namespace SpaceMarines_TD.Source.Views
                 text,
                 Color.White,
                 color,
-                new Vector2(m_graphics.PreferredBackBufferWidth / 2 - stringSize.X / 2, y),
+                new Vector2(1920 / 2 - stringSize.X / 2, y),
                 1.0f);
 
             return y + stringSize.Y;

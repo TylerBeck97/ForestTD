@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace SpaceMarines_TD.Source.Input
 {
-    class MouseInput : IInputDevice
+    class MouseInput
     {
         private Dictionary<MouseEvent, CommandEntry> m_commandEntries = new Dictionary<MouseEvent, CommandEntry>();
         private MouseState m_mousePreviousState = Mouse.GetState();
@@ -24,31 +24,33 @@ namespace SpaceMarines_TD.Source.Input
             m_commandEntries.Add(evt, new CommandEntry(evt, callback));
         }
 
-        public void Update(GameTime gameTime)
+        public void Update(GameTime gameTime, Matrix scalingMatrix)
         {
             var state = Mouse.GetState();
 
+            var inverseMatrix = Matrix.Invert(scalingMatrix);
+
             Clicked = state.LeftButton == ButtonState.Pressed && !MouseDown;
             MouseDown = state.LeftButton == ButtonState.Pressed;
-            Position = new Vector2(state.X, state.Y);
+            Position = Vector2.TransformNormal(new Vector2(state.X, state.Y), inverseMatrix);
 
             foreach (var entry in m_commandEntries.Values)
             {
                 // Transitioning from mouse up to mouse down
                 if (entry.evt == MouseEvent.MouseDown && state.LeftButton == ButtonState.Pressed && !MouseDown)
                 {
-                    entry.callback(gameTime, state.X, state.Y);
+                    entry.callback(gameTime, (int) Position.X, (int)Position.Y);
                 }
                 // Transitioning from mouse down to mouse up
                 if (entry.evt == MouseEvent.MouseUp && state.LeftButton == ButtonState.Released && MouseDown)
                 {
-                    entry.callback(gameTime, state.X, state.Y);
+                    entry.callback(gameTime, (int)Position.X, (int)Position.Y);
                 }
                 if (entry.evt == MouseEvent.MouseMove)
                 {
-                    if (state.X != m_mousePreviousState.X || state.Y != m_mousePreviousState.Y)
+                    if ((int)Position.X != m_mousePreviousState.X || (int)Position.Y != m_mousePreviousState.Y)
                     {
-                        entry.callback(gameTime, state.X, state.Y);
+                        entry.callback(gameTime, (int)Position.X, (int)Position.Y);
                     }
                 }
             }

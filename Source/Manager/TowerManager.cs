@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using SpaceMarines_TD.Source.Graph;
+using SpaceMarines_TD.Source.Input;
 using SpaceMarines_TD.Source.Objects;
 using SpaceMarines_TD.Source.SpritesAnimation;
 using SpaceMarines_TD.Source.Views;
@@ -14,15 +15,17 @@ namespace SpaceMarines_TD.Source.Manager
 {
     class TowerManager
     {
-        public const int AirTowerCost = 150;
-        public const int BulletTowerCost = 100;
-        public const int BombTowerCost = 200;
-        public const int MixedTowerCost = 300;
+        public const int AirTowerCost = 30;
+        public const int BulletTowerCost = 15;
+        public const int BombTowerCost = 45;
+        public const int MixedTowerCost = 30;
 
         private AirTowerSprite m_airTowerRenderer;
         private AnimatedTowerSprite m_groundTowerRenderer;
         private AnimatedTowerSprite m_bombTowerRenderer;
         private AnimatedTowerSprite m_mixedTowerRenderer;
+
+        private MouseInput m_mouseInput;
 
         private Texture2D m_towerBaseTexture2D;
         private Texture2D m_rangeCircleTexture2D;
@@ -31,15 +34,20 @@ namespace SpaceMarines_TD.Source.Manager
 
         private bool m_isPlaceable = false;
 
-        private Rectangle m_towerZone = new Rectangle(225, 25, 1000, 1000);
+        private Rectangle m_towerZone = new Rectangle(225, 25, 1050, 1050);
 
         private GameStateManager m_gameStateManager;
+        private readonly ParticleManager m_particleManager;
+        private readonly SoundManager m_soundManager;
 
-        public Tower SelectedTower { get; private set; }
+        public Tower SelectedTower { get; set; }
 
-        public TowerManager(GameStateManager gameStateManager)
+        public TowerManager(GameStateManager gameStateManager, ParticleManager particleManager, SoundManager soundManager, MouseInput mouseInput)
         {
             m_gameStateManager = gameStateManager;
+            m_particleManager = particleManager;
+            m_mouseInput = mouseInput;
+            m_soundManager = soundManager;
         }
 
         public void loadContent(ContentManager contentManager, SpriteSheet spriteSheet)
@@ -79,8 +87,8 @@ namespace SpaceMarines_TD.Source.Manager
                     (304, 304)
                 });
 
-            m_rangeCircleTexture2D = contentManager.Load<Texture2D>("rangeCircle");
-            m_towerBaseTexture2D = contentManager.Load<Texture2D>("TowerBase");
+            m_rangeCircleTexture2D = contentManager.Load<Texture2D>("images/rangeCircle");
+            m_towerBaseTexture2D = contentManager.Load<Texture2D>("images/TowerBase");
         }
 
         public void Draw(GameTime gameTime, SpriteBatch spriteBatch)
@@ -98,7 +106,7 @@ namespace SpaceMarines_TD.Source.Manager
                         (int)tower.Center.Y - tower.Range / 2, tower.Range, tower.Range), Color.White);
                 }
 
-                switch (tower.m_type)
+                switch (tower.type)
                 {
                     case TowerType.Air:
                         m_airTowerRenderer.draw(gameTime, spriteBatch, tower, tower.Heading + MathHelper.PiOver2, false, towerColor);
@@ -131,7 +139,7 @@ namespace SpaceMarines_TD.Source.Manager
                 new Rectangle((int)(tower.Center.X - tower.Size.X / 2), (int)(tower.Center.Y - tower.Size.Y / 2),
                     (int)tower.Size.X, (int)tower.Size.Y), towerColor);
 
-            switch (tower.m_type)
+            switch (tower.type)
             {
                 case TowerType.Air:
                     m_airTowerRenderer.draw(gameTime, spriteBatch, tower, MathHelper.PiOver2, true, towerColor);
@@ -162,11 +170,13 @@ namespace SpaceMarines_TD.Source.Manager
                 {
                     m_gameStateManager.Towers.Add(m_placeTower);
                     m_gameStateManager.Money -= m_placeTower.BaseCost;
+                    m_gameStateManager.Score += m_placeTower.BaseCost;
                     m_placeTower = null;
+                    m_soundManager.PlayPlaceSound();
                 }
                 else
                 {
-                    // TODO: play error sound
+                    m_soundManager.PlayErrorSound();
                 }
             }
             else // Handle tower selection.
@@ -185,28 +195,53 @@ namespace SpaceMarines_TD.Source.Manager
             }
         }
 
-        public void Update(GameTime gameTime, Rectangle backgroundRectangle, int creepSize)
+        public void Update(GameTime gameTime, Rectangle backgroundRectangle)
         {
-            var state = Mouse.GetState();
-
-            if (m_placeTower != null)
+            if (!m_gameStateManager.isGameOver)
             {
-                // TODO Fix tower placement bug when you try to place three bomb towers in a row
-                var pos = new Vector2(MathF.Round(state.X / 50.0f) * 50, MathF.Round(state.Y / 50.0f) * 50);
-
-                m_placeTower.Center = pos;
-
-                m_isPlaceable = CheckPlaceable(GamePlayView.TowerSize, backgroundRectangle, creepSize, pos,
-                    m_placeTower.BaseCost);
-            }
-
-            foreach (var tower in m_gameStateManager.Towers)
-            {
-                var projectile = tower.Update(gameTime, m_gameStateManager.Creeps, GamePlayView.ProjectileSize);
-                if (projectile != null)
+                if (m_placeTower != null)
                 {
-                    m_gameStateManager.Projectiles.Add(projectile);
+                    var pos = new Vector2(MathF.Round(m_mouseInput.Position.X / 50.0f) * 50, MathF.Round(m_mouseInput.Position.Y / 50.0f) * 50);
+
+                    m_placeTower.Center = pos;
+
+                    m_isPlaceable = CheckPlaceable(GamePlayView.TowerSize, backgroundRectangle, CreepManager.CreepSize, pos,
+                        m_placeTower.BaseCost);
                 }
+
+                foreach (var tower in m_gameStateManager.Towers)
+                {
+                    var projectile = tower.Update(gameTime, m_gameStateManager.Creeps, GamePlayView.ProjectileSize);
+                    if (projectile != null)
+                    {
+                        switch (tower.type)
+                        {
+                            case TowerType.Air:
+                                m_soundManager.PlayMissileSound(gameTime);
+                                break;
+                            case TowerType.Bullet:
+                                m_soundManager.PlayBulletSound(gameTime);
+                                break;
+                            case TowerType.Bomb:
+                                m_soundManager.PlaySlingSound(gameTime);
+                                break;
+                            case TowerType.Mixed:
+                                m_soundManager.PlayCannonSound(gameTime);
+                                break;
+                        }
+                        m_gameStateManager.Projectiles.Add(projectile);
+                    }
+                }
+            }
+            else
+            {
+                foreach(var tower in m_gameStateManager.Towers)
+                {
+                    m_particleManager.AddMissileExplosion(tower.Center);
+                }
+                m_gameStateManager.Towers.Clear();
+                m_placeTower = null;
+                SelectedTower = null;
             }
         }
 
@@ -231,8 +266,8 @@ namespace SpaceMarines_TD.Source.Manager
                     (backgroundRectangle.Size.Y - 100) / creepSize, backgroundRectangle.Size.X / creepSize, creepSize);
 
                 m_gameStateManager.Towers.Remove(m_placeTower);
-                if (upDownGraph.FindPath(500, 25, 500, 1025).Count == 0 ||
-                    sideToSideGraph.FindPath(225, 500, 1225, 500).Count == 0)
+                if (upDownGraph.FindPath(500, 25, 500, 1075).Count == 0 ||
+                    sideToSideGraph.FindPath(225, 500, 1275, 500).Count == 0)
                 {
                     return false;
                 }
@@ -241,16 +276,35 @@ namespace SpaceMarines_TD.Source.Manager
             return true;
         }
 
+        public TowerType? GetPlaceTowerType()
+        {
+            if (m_placeTower != null) return m_placeTower.type;
+
+            return null;
+        }
+
         public void SetPlaceTowerType(TowerType? towerType)
         {
+           
             if (towerType != null)
             {
-                var state = Mouse.GetState();
+                if (m_placeTower != null && towerType == m_placeTower.type)
+                {
+                    m_placeTower = null;
+                    return;
+                }
 
-                var pos = new Vector2(MathF.Round(state.X / 50.0f) * 50, MathF.Round(state.Y / 50.0f) * 50);
-                m_placeTower = new Tower(new Vector2(GamePlayView.TowerSize, GamePlayView.TowerSize), pos,
-                    towerType.Value,
-                    GetCost(towerType.Value));
+                if (m_gameStateManager.Money >= GetCost(towerType.Value))
+                {
+                    var pos = new Vector2(MathF.Round(m_mouseInput.Position.X / 50.0f) * 50, MathF.Round(m_mouseInput.Position.Y / 50.0f) * 50);
+                    m_placeTower = new Tower(new Vector2(GamePlayView.TowerSize, GamePlayView.TowerSize), pos,
+                        towerType.Value,
+                        GetCost(towerType.Value));
+                }
+                else
+                {
+                    m_soundManager.PlayErrorSound();
+                } 
             }
             else
             {
@@ -267,6 +321,28 @@ namespace SpaceMarines_TD.Source.Manager
                 case TowerType.Bomb: return BombTowerCost;
                 case TowerType.Mixed: return MixedTowerCost;
                 default: throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
+        }
+
+        public void SellTower(Tower tower)
+        {
+            m_gameStateManager.Towers.Remove(tower);
+            m_gameStateManager.Money += tower.TotalCost / 2;
+            m_gameStateManager.Score -= tower.TotalCost;
+
+            m_particleManager.AddSellEffect(tower.Center);
+            m_soundManager.PlaySellSound();
+        }
+
+        public void UpgradeTower(Tower tower)
+        {
+            if (tower.CanUpgrade() &&
+                m_gameStateManager.Money >= tower.UpgradeCost)
+            {
+                m_gameStateManager.Money -= tower.UpgradeCost;
+                m_gameStateManager.Score += tower.UpgradeCost;
+                tower.Upgrade();
+                m_soundManager.PlayUpgradeSound();
             }
         }
 

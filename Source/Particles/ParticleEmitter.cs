@@ -43,34 +43,10 @@ namespace SpaceMarines_TD.Source.Particles
         /// </summary>
         public void update(GameTime gameTime)
         {
-            if (emit)
-            {
-                //
-                // Generate particles at the specified rate
-                m_accumulated += gameTime.ElapsedGameTime;
-                while (m_accumulated > m_rate)
-                {
-                    m_accumulated -= m_rate;
-
-                    Particle p = new Particle(
-                        m_random.Next(),
-                        new Vector2(m_centerX, m_random.Next(m_minY, m_maxY)),
-                        m_random.nextCircleVector(),
-                        (float) m_random.nextGaussian(m_speed, 1),
-                        m_lifetime);
-
-                    if (!m_particles.ContainsKey(p.name))
-                    {
-                        m_particles.Add(p.name, p);
-                    }
-                }
-            }
-
-
             //
             // For any existing particles, update them, if we find ones that have expired, add them
             // to the remove list.
-            List<int> removeMe = new List<int>();
+            var removeMe = new List<int>();
             foreach (Particle p in m_particles.Values)
             {
                 p.lifetime -= gameTime.ElapsedGameTime;

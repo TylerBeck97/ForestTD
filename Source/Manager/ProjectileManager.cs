@@ -17,10 +17,14 @@ namespace SpaceMarines_TD.Source.Manager
         private StaticSprite m_bombRenderer;
 
         private GameStateManager m_gameStateManager;
+        private readonly ParticleManager m_particleManager;
+        private readonly SoundManager m_soundManager;
 
-        public ProjectileManager(GameStateManager mGameStateManager)
+        public ProjectileManager(GameStateManager mGameStateManager, ParticleManager particleManager, SoundManager soundManager)
         {
             m_gameStateManager = mGameStateManager;
+            m_particleManager = particleManager;
+            m_soundManager = soundManager;
         }
 
         public void loadContent(ContentManager contentManager, SpriteSheet spriteSheet)
@@ -44,11 +48,16 @@ namespace SpaceMarines_TD.Source.Manager
 
                     if (projectileCollision != null)
                     {
-                        // TODO Ground bullets hit air creep
                         if (projectile.Type == ProjectileType.Missile &&
                             projectileCollision.Type == CreepType.Air ||
                             projectile.Type == ProjectileType.Bullet)
                         {
+                            if (projectile.Type == ProjectileType.Missile)
+                            {
+                                m_particleManager.AddMissileExplosion(projectile.Center + Vector2.Normalize(projectile.LastDirectionMoved) * projectile.Size.Y / 2);
+                                m_soundManager.PlayExplosionSound(gameTime);
+                            }
+
                             projectileCollision.Health -= projectile.Damage;
                             deadProjectiles.Add(projectile);
                         }
@@ -63,7 +72,28 @@ namespace SpaceMarines_TD.Source.Manager
                             {
                                 hitCreep.Health -= projectile.Damage;
                             }
+
+                            m_particleManager.AddBombExplosion(projectile.Center, projectile.Diameter);
+                            m_soundManager.PlayClusterSound(gameTime);
                             deadProjectiles.Add(projectile);
+                        }
+                    }
+
+                    if (projectile.Type == ProjectileType.Missile)
+                    {
+                        if ((gameTime.TotalGameTime - projectile.LastSmokeEmission).TotalMilliseconds > Projectile.SmokeCooldown)
+                        {
+                            m_particleManager.AddSmokeEffect(projectile.Center - Vector2.Normalize(projectile.LastDirectionMoved) * projectile.Size.Y/2, Color.White);
+                            projectile.LastSmokeEmission = gameTime.TotalGameTime;
+                        }
+                    }
+
+                    if (projectile.Type == ProjectileType.Bomb)
+                    {
+                        if ((gameTime.TotalGameTime - projectile.LastSmokeEmission).TotalMilliseconds > Projectile.SmokeCooldown)
+                        {
+                            m_particleManager.AddSmokeEffect(projectile.Center - Vector2.Normalize(projectile.LastDirectionMoved) * projectile.Size.Y / 2, Color.Tan * .5f);
+                            projectile.LastSmokeEmission = gameTime.TotalGameTime;
                         }
                     }
                 }

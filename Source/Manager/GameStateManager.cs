@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using SpaceMarines_TD.Source.Input;
 using SpaceMarines_TD.Source.Objects;
 
 namespace SpaceMarines_TD.Source.Manager
@@ -12,7 +13,12 @@ namespace SpaceMarines_TD.Source.Manager
         public int Lives { get; set; }
         public int Money { get; set; }
         public int Score { get; set; }
+        public int Wave { get; set; }
 
+        public bool isLevelActive { get; set; }
+        public bool isGameOver { get; set; }
+
+        public const int NumOfWaves = 5;
 
         // Game objects.
         public List<Creep> Creeps { get; }
@@ -34,9 +40,12 @@ namespace SpaceMarines_TD.Source.Manager
             Projectiles.Clear();
             Towers.Clear();
 
-            Level = 1;
+            isGameOver = false;
+            isLevelActive = false;
+            Level = 0;
+            Wave = 0;
             Lives = 20;
-            Money = 500;
+            Money = 60;
             Score = 0;
         }
 
@@ -46,7 +55,8 @@ namespace SpaceMarines_TD.Source.Manager
 
             if (Lives == 0)
             {
-                // TODO Die
+                isGameOver = true;
+                isLevelActive = false;
             }
         }
     }

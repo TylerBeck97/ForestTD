@@ -7,7 +7,6 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json.Serialization;
 using SpaceMarines_TD.Source.Objects;
-using TestGame.Services;
 
 namespace SpaceMarines_TD.Source.Graph
 {
@@ -16,7 +15,6 @@ namespace SpaceMarines_TD.Source.Graph
         public Node[,] GraphNodes { get; }
         
         private int m_gridSize;
-        //private readonly DebugService _debugService;
         private int m_startX;
         private int m_startY;
 
@@ -25,7 +23,6 @@ namespace SpaceMarines_TD.Source.Graph
             GraphNodes = new Node[rowCount, colCount];
 
             m_gridSize = gridSize;
-            //_debugService = debugService;
             m_startX = startX;
             m_startY = startY;
 
@@ -34,13 +31,9 @@ namespace SpaceMarines_TD.Source.Graph
             LinkGrid(rowCount, colCount);
         }
 
-        // Garbage
-        private static int _temp = 0;
-
         // Uses A* Algorithm for path finding
         public Stack<Vector2> FindPath(float startX, float startY, float endX, float endY)
         {
-            // DEBUG
             ResetEdges();
 
             var (sX, sY) = ConvertToGridCoord(startX, startY);
@@ -55,8 +48,7 @@ namespace SpaceMarines_TD.Source.Graph
             var startNode = GraphNodes[sY, sX];
             var endNode = GraphNodes[eY, eX];
 
-            // DEBUG
-            if (startNode == null) return new Stack<Vector2>();
+            if (startNode == null || endNode == null) return new Stack<Vector2>();
 
             var sortedSet = new SortedSet<Node>(new ByDistanceToGoal());
 
@@ -64,22 +56,10 @@ namespace SpaceMarines_TD.Source.Graph
             startNode.DistanceFromStart = 0;
 
             sortedSet.Add(startNode);
-            _temp = (_temp + 1) % 3;
 
             while (sortedSet.Count > 0)
             {
                 var currNode = sortedSet.First();
-
-                Color c;
-                switch (_temp)
-                {
-                    case 0: c = Color.Blue; break;
-                    case 1: c = Color.Red; break;
-                    case 2: c = Color.Green; break;
-                    default: c = Color.Yellow; break;
-                }
-
-                //_debugService.MarkPoint(currNode.Coordinates, c);
 
                 if (currNode.Equals(endNode))
                 {
@@ -93,7 +73,6 @@ namespace SpaceMarines_TD.Source.Graph
                     return stack;
                 }
 
-                // Debug.WriteLine(currNode);
                 sortedSet.Remove(currNode);
                 foreach (var neighboringNode in currNode.NeighboringNodes)
                 {
@@ -114,7 +93,7 @@ namespace SpaceMarines_TD.Source.Graph
             return new Stack<Vector2>();
         }
 
-        public void ResetEdges()
+        private void ResetEdges()
         {
             foreach (var node in GraphNodes)
             {
@@ -214,8 +193,6 @@ namespace SpaceMarines_TD.Source.Graph
     {
         public int Compare(Node x, Node y)
         {
-            // Debug.WriteLine($"Compare {x} {y}.");
-
             if (x.Equals(y)) return 0;
 
             if (x.DistanceToGoal < y.DistanceToGoal)

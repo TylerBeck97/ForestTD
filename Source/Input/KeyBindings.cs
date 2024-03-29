@@ -17,7 +17,6 @@ namespace SpaceMarines_TD.Source.Input
 
         public static KeyBindings Default => new KeyBindings
         {
-            // TODO: Set up default keybindings
             Ground = "G",
             Air = "A",
             Mixed = "M",

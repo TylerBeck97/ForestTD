@@ -33,8 +33,8 @@ namespace SpaceMarines_TD.Source.SpritesAnimation
             spriteBatch.Draw(
                 m_spriteSheet.Texture,
                 new Rectangle((int)(model.Center.X), (int)(model.Center.Y), (int)model.Size.X, (int)model.Size.Y), // Destination rectangle
-                new Rectangle((int) (spriteX + m_spriteSheet.Offset.X), 
-                    (int) (spriteY + m_spriteSheet.Offset.Y), m_subImageWidth, m_subImageHeight), // Source sub-texture
+                new Rectangle((int) (spriteX ), 
+                    (int) (spriteY), m_subImageWidth, m_subImageHeight), // Source sub-texture
                 isTransparent ? color * 0.5f : color,
                 0, // Angular rotation
                 new Vector2(m_subImageWidth / 2.0f, m_subImageHeight / 2.0f), // Center point of rotation
@@ -46,8 +46,8 @@ namespace SpaceMarines_TD.Source.SpritesAnimation
             spriteBatch.Draw(
                 m_spriteSheet.Texture,
                 new Rectangle((int)(model.Center.X), (int)(model.Center.Y), (int)model.Size.X, (int)model.Size.Y), // Destination rectangle
-                new Rectangle((int)(spriteX + m_spriteSheet.Offset.X),
-                    (int)(spriteY + m_spriteSheet.Offset.Y), m_subImageWidth, m_subImageHeight), // Source sub-texture
+                new Rectangle((int)(spriteX),
+                    (int)(spriteY), m_subImageWidth, m_subImageHeight), // Source sub-texture
                 isTransparent ? color * 0.5f : color,
                 (float) rotation, // Angular rotation
                 new Vector2(model.Size.X / 2.0f, model.Size.Y / 2.0f), // Center point of rotation

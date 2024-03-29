@@ -10,8 +10,6 @@ namespace SpaceMarines_TD.Source.SpritesAnimation
             Texture = texture;
         }
 
-        public Vector2 Offset { get; set; }
-
         public Texture2D Texture { get; set; }
     }
 }

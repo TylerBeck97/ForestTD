@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using SpaceMarines_TD.Source.Input;
+using SpaceMarines_TD.Source.Manager;
 using SpaceMarines_TD.Source.Views;
 
 namespace SpaceMarines_TD.Source
@@ -11,10 +12,11 @@ namespace SpaceMarines_TD.Source
     {
         private GraphicsDeviceManager m_graphics;
         private IGameState m_currentState;
-        private GameStateEnum m_nextStateEnum = GameStateEnum.GamePlay; //TODO: Change to MainMenu
+        private GameStateEnum m_nextStateEnum = GameStateEnum.MainMenu;
         private Dictionary<GameStateEnum, IGameState> m_states;
         private SettingsManager m_settingsManager;
         private HighScoreManager m_highScoreManager;
+        private SoundManager m_soundManager;
 
         public GameLoop()
         {
@@ -24,6 +26,7 @@ namespace SpaceMarines_TD.Source
 
             m_settingsManager = new SettingsManager();
             m_highScoreManager = new HighScoreManager();
+            m_soundManager = new SoundManager();
         }
 
         protected override void Initialize()
@@ -31,19 +34,19 @@ namespace SpaceMarines_TD.Source
             m_settingsManager.Load();
             m_highScoreManager.Load();
 
-            m_graphics.PreferredBackBufferWidth = 1920;
-            m_graphics.PreferredBackBufferHeight = 1080;
+            m_graphics.PreferredBackBufferWidth = 1600;
+            m_graphics.PreferredBackBufferHeight = 900;
 
             m_graphics.ApplyChanges();
 
             m_states = new Dictionary<GameStateEnum, IGameState>(); 
             m_states.Add(GameStateEnum.MainMenu, new MainMenuView());
-            m_states.Add(GameStateEnum.GamePlay, new GamePlayView(m_settingsManager));
+            m_states.Add(GameStateEnum.GamePlay, new GamePlayView(m_settingsManager, m_highScoreManager, m_soundManager));
             m_states.Add(GameStateEnum.HighScores, new HighScoreView(m_highScoreManager));
             m_states.Add(GameStateEnum.Controls, new ControlsView(m_settingsManager));
             m_states.Add(GameStateEnum.Credits, new CreditsView());
 
-            m_currentState = m_states[GameStateEnum.MainMenu]; // TODO change back to MainMenu
+            m_currentState = m_states[m_nextStateEnum];
 
             base.Initialize();
         }
@@ -59,18 +62,22 @@ namespace SpaceMarines_TD.Source
 
         protected override void Update(GameTime gameTime)
         {
+            if (m_currentState.GetType() == typeof(MainMenuView))
+            {
+                m_soundManager.UpdateMainMenuMusic();
+            }
             m_nextStateEnum = m_currentState.processInput(gameTime);
 
-            if (m_nextStateEnum == GameStateEnum.Exit) Exit();
-
             m_currentState.update(gameTime);
+
+            if (m_nextStateEnum == GameStateEnum.Exit) Exit();
 
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Black);
 
             m_currentState.render(gameTime);
 

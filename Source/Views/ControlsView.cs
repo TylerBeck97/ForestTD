@@ -14,6 +14,14 @@ namespace SpaceMarines_TD.Source.Views
         private SpriteFont m_fontMenu;
         private SpriteFont m_fontMenuSelect;
 
+        private Texture2D m_background;
+
+        private Rectangle m_sellRectangle;
+        private Rectangle m_upgradeRectangle;
+        private Rectangle m_startRectangle;
+
+        private MouseInput m_inputMouse;
+
         private enum MenuState
         {
             SellTower,
@@ -30,16 +38,52 @@ namespace SpaceMarines_TD.Source.Views
         public ControlsView(SettingsManager settings)
         {
             m_settings = settings;
+            m_inputMouse = new MouseInput();
         }
 
         public override void loadContent(ContentManager contentManager)
         {
             m_fontMenu = contentManager.Load<SpriteFont>("fonts/Roboto36");
             m_fontMenuSelect = contentManager.Load<SpriteFont>("fonts/Roboto46");
+
+            m_background = contentManager.Load<Texture2D>("images/MainMenu");
         }
 
         public override GameStateEnum processInput(GameTime gameTime)
         {
+            m_inputMouse.Update(gameTime, m_scalingMatrix);
+
+            var mousePos = new Vector2(m_inputMouse.Position.X, m_inputMouse.Position.Y);
+
+            if (m_sellRectangle.Contains(mousePos))
+            {
+                if (m_inputMouse.Clicked)
+                {
+                    m_setBinding = "Sell Tower";
+                    m_bindingKey = true;
+                }
+                m_currentSelection = MenuState.SellTower;
+            }
+            if (m_upgradeRectangle.Contains(mousePos))
+            {
+                if (m_inputMouse.Clicked)
+                {
+                    m_setBinding = "Upgrade Tower";
+                    m_bindingKey = true;
+                }
+                m_currentSelection = MenuState.Upgrade;
+            }
+            if (m_startRectangle.Contains(mousePos))
+            {
+                if (m_inputMouse.Clicked)
+                {
+                    m_setBinding = "Start Level";
+                    m_bindingKey = true;
+                }
+                m_currentSelection = MenuState.StartLevel;
+            }
+            
+
             var state = Keyboard.GetState();
             if (!m_waitForKeyRelease)
             {
@@ -128,15 +172,32 @@ namespace SpaceMarines_TD.Source.Views
 
         public override void render(GameTime gameTime)
         {
-            m_spriteBatch.Begin();
+            m_spriteBatch.Begin(transformMatrix: m_scalingMatrix);
 
-            var bottom = drawMenuItem(m_currentSelection == MenuState.SellTower ? m_fontMenuSelect : m_fontMenu, "Sell Tower: " + m_settings.Bindings.SellTower, 200, m_currentSelection == MenuState.SellTower ? Color.Yellow : Color.Red);
-            bottom = drawMenuItem(m_currentSelection == MenuState.Upgrade ? m_fontMenuSelect : m_fontMenu, "Upgrade Tower: " + m_settings.Bindings.Upgrade, bottom, m_currentSelection == MenuState.Upgrade ? Color.Yellow : Color.Red);
+            m_spriteBatch.Draw(m_background, new Rectangle(0, 0, 1920, 1080), Color.White);
+            var text = $"Sell Tower: {m_settings.Bindings.SellTower}";
+            var font = m_currentSelection == MenuState.SellTower ? m_fontMenuSelect : m_fontMenu;
+            var stringSize = font.MeasureString(text);
+            m_sellRectangle = new Rectangle((int)(1920 / 2 - stringSize.X / 2), 300, (int)stringSize.X, (int)stringSize.Y);
+            var bottom = drawMenuItem(font, text, 300, m_currentSelection == MenuState.SellTower ? Color.Yellow : Color.Red);
+
+            text = $"Upgrade Tower: {m_settings.Bindings.Upgrade}";
+            font = m_currentSelection == MenuState.Upgrade ? m_fontMenuSelect : m_fontMenu;
+            stringSize = font.MeasureString(text);
+            m_upgradeRectangle = new Rectangle((int)(1920 / 2 - stringSize.X / 2), (int)bottom, (int)stringSize.X, (int)stringSize.Y);
+            bottom = drawMenuItem(font, text, bottom, m_currentSelection == MenuState.Upgrade ? Color.Yellow : Color.Red);
+            
+
+            text = $"Start Level: {m_settings.Bindings.StartLevel}";
+            font = m_currentSelection == MenuState.StartLevel ? m_fontMenuSelect : m_fontMenu;
+            stringSize = font.MeasureString(text);
+            m_startRectangle = new Rectangle((int)(1920 / 2 - stringSize.X / 2), (int)bottom, (int)stringSize.X, (int)stringSize.Y);
             bottom = drawMenuItem(m_currentSelection == MenuState.StartLevel ? m_fontMenuSelect : m_fontMenu, "Start Level: " + m_settings.Bindings.StartLevel, bottom, m_currentSelection == MenuState.StartLevel ? Color.Yellow : Color.Red);
+
 
             if (m_bindingKey)
             {
-                bottom = drawMenuItem(m_fontMenuSelect, String.Format("Press the key you wish to bind {0} to", m_setBinding), bottom,Color.Red);
+                bottom = drawMenuItem(m_fontMenuSelect, $"Press the key you wish to bind {m_setBinding} to", bottom,Color.Red);
                 drawMenuItem(m_fontMenuSelect, "Press esc to cancel", bottom, Color.Red);
             }
             m_spriteBatch.End();
@@ -151,7 +212,7 @@ namespace SpaceMarines_TD.Source.Views
                 text,
                 Color.White,
                 color,
-                new Vector2(m_graphics.PreferredBackBufferWidth / 2 - stringSize.X / 2, y),
+                new Vector2(1920 / 2 - stringSize.X / 2, y),
                 1.0f);
 
             return y + stringSize.Y;
